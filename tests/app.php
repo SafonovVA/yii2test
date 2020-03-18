@@ -1,41 +1,90 @@
 <?php
-
 namespace tests;
-
 use app\models\User;
+use Yii;
 
 require __DIR__ . '/_bootstap.php';
 
-class UserTest
+
+
+class UserTest extends TestCase
 {
+    public function setUp()
+    {
+        parent::setUp();
+
+        User::deleteAll();
+        Yii::$app->db->createCommand()->insert(User::tableName(), [
+            'username' => 'username',
+            'email' => 'a@a.a',
+        ])->execute();
+
+    }
+
+    public function testValidateExistedValues()
+    {
+        $user = new User([
+            'username' => 'username',
+            'email' => 'a@a.a',
+        ]);
+
+        $this->assertFalse($user->validate(), 'model is not valid');
+        $this->assertArrayHasKey('username', $user->getErrors(), 'check existed username error');
+        $this->assertArrayHasKey('email', $user->getErrors(), 'check existed email error');
+    }
+    
     public function testValidateEmptyValues()
     {
         $user = new User();
 
-        echo 'validate empty username and email';
-        if ($user->validate() == false) {
-            echo ' Ok' . PHP_EOL;
-        } else {
-            echo ' Fail' . PHP_EOL;
-        }
-
-        echo 'check empty username error';
-        if (array_key_exists('username', $user->getErrors())) {
-            echo ' Ok' . PHP_EOL;
-        } else {
-            echo ' Fail' . PHP_EOL;
-        }
-
-        echo 'check empty username error';
-        if (array_key_exists('email', $user->getErrors())) {
-            echo ' Ok' . PHP_EOL;
-        } else {
-            echo ' Fail' . PHP_EOL;
-        }
+        $this->assertFalse($user->validate(), 'model is not valid');
+        $this->assertArrayHasKey('username', $user->getErrors(), 'check username error');
+        $this->assertArrayHasKey('email', $user->getErrors(), 'check email error');
     }
 
+    public function testValidateWrongValues()
+    {
+        $user = new User([
+            'username' => 'Wrong % username',
+            'email' => 'wrong_email',
+        ]);
 
+        $this->assertFalse($user->validate(), 'validate incorrect username and email');
+        $this->assertArrayHasKey('username', $user->getErrors(), 'check incorrect username error');
+        $this->assertArrayHasKey('email', $user->getErrors(), 'check incorrect email error');
+    }
+
+    public function testValidateCorrectValues()
+    {
+        $user = new User([
+            'username' => 'username',
+            'email' => 'a@a.a',
+        ]);
+
+        $this->assertTrue($user->validate(), 'correct model is valid');
+    }
+
+    public function testSaveIntoDatabase()
+    {
+        $user = new User([
+            'username' => 'username',
+            'email' => 'a@a.a',
+        ]);
+
+        $this->assertTrue($user->save(), 'saved to database');
+    }
 }
 
-$test = new UserTest();
-$test->testValidateEmptyValues();
+
+$class = new \ReflectionClass(UserTest::class);
+foreach ($class->getMethods() as $method) {
+    if (substr($method->name, 0, 4) == 'test') {
+        echo 'Test ' . $method->class . '::' . $method->name . PHP_EOL . PHP_EOL;
+        /** @var TestCase $test */
+        $test = new $method->class;
+        $test->setUp();
+        $test->{$method->name}();
+        $test->tearDown();
+        echo PHP_EOL;
+    }
+}
