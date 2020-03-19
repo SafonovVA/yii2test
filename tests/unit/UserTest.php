@@ -1,22 +1,22 @@
 <?php
-namespace tests;
+
+namespace tests\unit;
+
 use app\models\User;
+
+use PHPUnit\Framework\TestCase;
 use Yii;
-
-require __DIR__ . '/_bootstap.php';
-
-
 
 class UserTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
         User::deleteAll();
         Yii::$app->db->createCommand()->insert(User::tableName(), [
-            'username' => 'username',
-            'email' => 'a@a.a',
+            'username' => 'name',
+            'email' => 'name@mail.com',
         ])->execute();
 
     }
@@ -24,15 +24,15 @@ class UserTest extends TestCase
     public function testValidateExistedValues()
     {
         $user = new User([
-            'username' => 'username',
-            'email' => 'a@a.a',
+            'username' => 'name',
+            'email' => 'name@mail.com',
         ]);
 
         $this->assertFalse($user->validate(), 'model is not valid');
         $this->assertArrayHasKey('username', $user->getErrors(), 'check existed username error');
         $this->assertArrayHasKey('email', $user->getErrors(), 'check existed email error');
     }
-    
+
     public function testValidateEmptyValues()
     {
         $user = new User();
@@ -57,34 +57,20 @@ class UserTest extends TestCase
     public function testValidateCorrectValues()
     {
         $user = new User([
-            'username' => 'username',
-            'email' => 'a@a.a',
+            'username' => 'TestUsername',
+            'email' => 'test@email.com',
         ]);
 
-        $this->assertTrue($user->validate(), 'correct model is valid');
+        $this->assertTrue($user->validate(), 'Correct model is valid');
     }
 
     public function testSaveIntoDatabase()
     {
         $user = new User([
-            'username' => 'username',
-            'email' => 'a@a.a',
+            'username' => 'TestUsername',
+            'email' => 'test@mail.com',
         ]);
 
         $this->assertTrue($user->save(), 'saved to database');
-    }
-}
-
-
-$class = new \ReflectionClass(UserTest::class);
-foreach ($class->getMethods() as $method) {
-    if (substr($method->name, 0, 4) == 'test') {
-        echo 'Test ' . $method->class . '::' . $method->name . PHP_EOL . PHP_EOL;
-        /** @var TestCase $test */
-        $test = new $method->class;
-        $test->setUp();
-        $test->{$method->name}();
-        $test->tearDown();
-        echo PHP_EOL;
     }
 }
